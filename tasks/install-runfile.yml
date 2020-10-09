@@ -1,0 +1,39 @@
+---
+- name: install dependencies for installing the runfile (Ubuntu)
+  apt:
+    name:
+    - gcc
+    - g++
+    - make
+    - dkms
+  when: ansible_distribution == 'Ubuntu'
+
+- name: add epel repo (RedHat)
+  yum_repository:
+    name: epel
+    description: EPEL YUM repo
+    baseurl: "{{ nvidia_driver_rhel_epel_repo_baseurl }}"
+    gpgkey: "{{ nvidia_driver_rhel_epel_repo_gpgkey }}"
+  environment: "{{proxy_env if proxy_env is defined else {}}}"
+  when: ansible_os_family == 'RedHat'
+
+- name: install dependencies for installing the runfile (RedHat)
+  yum:
+    name:
+    - gcc
+    - gcc-c++
+    - make
+    - dkms
+  when: ansible_os_family == 'RedHat'
+
+- name: download driver runfile
+  get_url:
+    url: "{{ nvidia_runfile_url }}"
+    dest: "{{ nvidia_runfile_dest }}"
+    mode: "0700"
+    owner: "root"
+    group: "root"
+  environment: "{{proxy_env if proxy_env is defined else {}}}"
+
+- name: install driver using runfile
+  command: "{{ nvidia_runfile_dest }} {{ nvidia_runfile_args }}" 
